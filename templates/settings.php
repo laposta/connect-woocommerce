@@ -17,7 +17,7 @@ class Laposta_Woocommerce_Settings {
 
 		// curl should be present
 		if (!function_exists('curl_init')) {
-			$this->status = 'no_url';
+			$this->status = 'no_curl';
 			return;
 		}
 
