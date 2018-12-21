@@ -152,17 +152,27 @@ if (!class_exists('Laposta_Subscribe')) {
                 $subscribe = isset($_POST['nieuwsbrief_signup']) ? 'ja' : 'nee';
                 update_post_meta($order_id, $checkoutText, $subscribe);
 
-                //Connect to API
+                // connect to API
                 if(isset($_POST['nieuwsbrief_signup'])) {
+
+                    // sanatize input
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                    if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+                        $ip = '127.0.0.1';
+                    }
+		    $email = sanitize_email($_POST['billing_email']);
+		    $first_name = sanitize_text_field($_POST['billing_first_name']);
+		    $last_name = sanitize_text_field($_POST['billing_last_name']); 
+
                     require_once("includes/laposta-php-1.2/lib/Laposta.php");
                     Laposta::setApiKey($apiKey);
                     $member = new Laposta_Member($list);
-                    $data=[
-                        'ip' => $_SERVER['REMOTE_ADDR'],
-                        'email' => $_POST['billing_email'],
+                    $data = [
+                        'ip' => $ip,
+                        'email' => $email,
                         'custom_fields' => array(
-                            'voornaam' => $_POST['billing_first_name'],
-                            'achternaam' => $_POST['billing_last_name']
+                            'voornaam' => $first_name,
+                            'achternaam' => $last_name
                         )
                     ];
                     $member->create($data);
