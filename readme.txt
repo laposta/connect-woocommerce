@@ -1,4 +1,4 @@
-=== Laposta ===
+=== Laposta WooCommerce ===
 Contributors: perrivdb, stijnvanderree
 Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
