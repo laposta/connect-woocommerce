@@ -2,7 +2,7 @@
 Contributors: perrivdb, stijnvanderree
 Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
-Tested up to: 5.7
+Tested up to: 5.9
 Stable tag: 1.0
 License: GPLv2 or later
 
@@ -19,7 +19,18 @@ so your customers can subscribe to your newsletter.
 Unzip the file in the plugins directory, and activate the plugin in the
 Plugins screen. Then go to the Settings to setup the connection to Laposta.
 
+== Upgrade Notice ==
+
+= 1.5 =
+
+* Tested for WP 5.9
+
+
 == Changelog ==
+
+= 1.5 =
+
+* Tested for WP 5.9
 
 = 1.4 =
 
