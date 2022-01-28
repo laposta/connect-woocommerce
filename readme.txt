@@ -21,12 +21,16 @@ Plugins screen. Then go to the Settings to setup the connection to Laposta.
 
 == Upgrade Notice ==
 
-= 1.5 =
+= 1.5.1 =
 
-* Tested for WP 5.9
+* Bugfix for broken register_activation_hook and register_deactivation_hook
 
 
 == Changelog ==
+
+= 1.5.1 =
+
+* Bugfix for broken register_activation_hook and register_deactivation_hook
 
 = 1.5 =
 

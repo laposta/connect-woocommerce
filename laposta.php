@@ -6,7 +6,7 @@
 Plugin Name: Laposta WooCommerce
 Plugin URI: http://laposta.nl/documentatie/wordpress.524.html
 Description: Laposta is programma waarmee je gemakkelijk en snel nieuwsbrieven kunt maken en versturen. Met deze plugin plaats je snel een optie in de checkout voor een nieuwsbrief registratie.
-Version: 1.5
+Version: 1.5.1
 Author: Laposta - Stijn van der Ree
 Author URI: http://laposta.nl/contact
 License: GPLv2 or later
@@ -34,7 +34,7 @@ if ( !function_exists( 'add_action' ) ) {
 	exit;
 }
 
-define('LAPOSTA_WOOCOMMERCE_VERSION', '1.5');
+define('LAPOSTA_WOOCOMMERCE_VERSION', '1.5.1');
 define('LAPOSTA_WOOCOMMERCE_PLUGIN_URL', plugin_dir_url( __FILE__ ));
 
 
@@ -82,11 +82,7 @@ if (!class_exists('Laposta_Woocommerce_Template')) {
 
 if (class_exists('Laposta_Woocommerce_Template')) {
 
-	// Installation and uninstallation hooks 
-	register_activation_hook(__FILE__, array('Laposta_Woocommerce_Template', 'activate'));
-	register_deactivation_hook(__FILE__, array('Laposta_Woocommerce_Template', 'deactivate'));
-
-	// instantiate the plugin class 
+	// instantiate the plugin class
 	$laposta_template = new Laposta_Woocommerce_Template();
 
 	// Add a link to the settings page onto the plugin page 
