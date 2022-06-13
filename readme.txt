@@ -2,7 +2,7 @@
 Contributors: perrivdb, stijnvanderree
 Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
-Tested up to: 5.9
+Tested up to: 6.0
 Stable tag: 1.5.1
 License: GPLv2 or later
 
