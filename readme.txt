@@ -21,12 +21,17 @@ Plugins screen. Then go to the Settings to setup the connection to Laposta.
 
 == Upgrade Notice ==
 
-= 1.6.0 =
+= 1.7.0 =
 
-* Tested for WP 6.1
+* Tested for WP 6.5
 
 
 == Changelog ==
+
+
+= 1.7.0 =
+
+* Tested for WP 6.5
 
 = 1.6.0 =
 
