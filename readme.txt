@@ -3,7 +3,7 @@ Contributors: perrivdb, stijnvanderree
 Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
 Tested up to: 6.1
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 License: GPLv2 or later
 
 This plugin can be used to add an optin checkbox to receive newsletters, using
