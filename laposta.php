@@ -6,7 +6,7 @@
 Plugin Name: Laposta WooCommerce
 Plugin URI: http://laposta.nl/documentatie/wordpress.524.html
 Description: Laposta is programma waarmee je gemakkelijk en snel nieuwsbrieven kunt maken en versturen. Met deze plugin plaats je snel een optie in de checkout voor een nieuwsbrief registratie.
-Version: 1.8.0
+Version: 1.9.0
 Author: Laposta - Stijn van der Ree
 Author URI: http://laposta.nl/contact
 License: GPLv2 or later
@@ -29,12 +29,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 // Make sure we don't expose any info if called directly
+use Laposta\Woocommerce\Service\AdminMenu;
+
 if ( !function_exists( 'add_action' ) ) {
 	echo 'Hi there!  I\'m just a plugin, not much I can do when called directly.';
 	exit;
 }
 
-define('LAPOSTA_WOOCOMMERCE_VERSION', '1.8.0');
+define('LAPOSTA_WOOCOMMERCE_VERSION', '1.9.0');
 define('LAPOSTA_WOOCOMMERCE_PLUGIN_URL', plugin_dir_url( __FILE__ ));
 
 
@@ -44,7 +46,8 @@ if (!class_exists('Laposta_Woocommerce_Template')) {
 
 		public function __construct() {
 			add_action('admin_init', array($this, 'admin_init'));
-			add_action('admin_menu', array($this, 'add_menu'));
+			require_once __DIR__.'/Service/AdminMenu.php';
+			new AdminMenu([$this, 'laposta_woocommerce_settings_page'], plugin_dir_url(__FILE__), 'Laposta Woocommerce', 'Laposta Woocommerce');
 		}
 
 		// hook into WP's admin_init action hook
@@ -62,19 +65,9 @@ if (!class_exists('Laposta_Woocommerce_Template')) {
 			register_setting('laposta_woocommerce_template-group', 'laposta-checkout-list');
 		}
 
-		// add a menu
-		public function add_menu() { 
-			add_options_page('Laposta Woocommerce', 'Laposta Woocommerce', 'manage_options', 'laposta_woocommerce_options', array(&$this, 'laposta_woocommerce_settings_page'));
-		}
-
-		// Menu Callback 
+		// Menu Callback
 		public function laposta_woocommerce_settings_page() {
-
-			if (!current_user_can('manage_options')) { 
-				wp_die(__('You do not have sufficient permissions to access this page.')); 
-			} 
-
-			// Render the settings template 
+			// Render the settings template
 			include(sprintf("%s/templates/settings.php", dirname(__FILE__))); 
 		}
 	}
