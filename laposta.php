@@ -7,7 +7,7 @@ Plugin Name: Laposta WooCommerce
 Plugin URI: http://laposta.nl/documentatie/wordpress.524.html
 Description: Laposta is programma waarmee je gemakkelijk en snel nieuwsbrieven kunt maken en versturen. Met deze plugin plaats je snel een optie in de checkout voor een nieuwsbrief registratie.
 Version: 1.9.1
-Author: Laposta - Stijn van der Ree
+Author: Laposta - Stijn van der Ree - Roel Bousardt
 Author URI: http://laposta.nl/contact
 License: GPLv2 or later
 */
