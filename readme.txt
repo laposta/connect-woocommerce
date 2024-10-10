@@ -1,5 +1,5 @@
 === Laposta WooCommerce ===
-Contributors: perrivdb, stijnvanderree
+Contributors: stijnvanderree, roelbousardt
 Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
 Tested up to: 6.6
