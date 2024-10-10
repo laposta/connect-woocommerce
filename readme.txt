@@ -3,7 +3,7 @@ Contributors: perrivdb, stijnvanderree
 Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
 Tested up to: 6.6
-Stable tag: 1.9.0
+Stable tag: 1.9.1
 License: GPLv2 or later
 
 This plugin can be used to add an optin checkbox to receive newsletters, using
@@ -21,11 +21,14 @@ Plugins screen. Then go to the Settings to setup the connection to Laposta.
 
 == Upgrade Notice ==
 
-= 1.9.0 =
-* Important Notice: The plugin settings have been relocated. You can now access them directly from the main menu instead of the settings submenu.
+= 1.9.1 =
+* Important notice: Plugin settings have been relocated for a more streamlined interface. You can now access them under the WooCommerce menu instead of the main WordPress menu.
 
 
 == Changelog ==
+= 1.9.1 =
+* Important Notice: The plugin settings have been relocated again. You can now access them under the WooCommerce main menu.
+
 = 1.9.0 =
 * Important Notice: The plugin settings have been relocated. You can now access them directly from the main menu instead of the settings submenu.
 

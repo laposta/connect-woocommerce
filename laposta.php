@@ -6,7 +6,7 @@
 Plugin Name: Laposta WooCommerce
 Plugin URI: http://laposta.nl/documentatie/wordpress.524.html
 Description: Laposta is programma waarmee je gemakkelijk en snel nieuwsbrieven kunt maken en versturen. Met deze plugin plaats je snel een optie in de checkout voor een nieuwsbrief registratie.
-Version: 1.9.0
+Version: 1.9.1
 Author: Laposta - Stijn van der Ree
 Author URI: http://laposta.nl/contact
 License: GPLv2 or later
@@ -29,14 +29,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 // Make sure we don't expose any info if called directly
-use Laposta\Woocommerce\Service\AdminMenu;
-
 if ( !function_exists( 'add_action' ) ) {
 	echo 'Hi there!  I\'m just a plugin, not much I can do when called directly.';
 	exit;
 }
 
-define('LAPOSTA_WOOCOMMERCE_VERSION', '1.9.0');
+define('LAPOSTA_WOOCOMMERCE_VERSION', '1.9.1');
 define('LAPOSTA_WOOCOMMERCE_PLUGIN_URL', plugin_dir_url( __FILE__ ));
 
 
@@ -46,15 +44,26 @@ if (!class_exists('Laposta_Woocommerce_Template')) {
 
 		public function __construct() {
 			add_action('admin_init', array($this, 'admin_init'));
-			require_once __DIR__.'/Service/AdminMenu.php';
-			new AdminMenu([$this, 'laposta_woocommerce_settings_page'], plugin_dir_url(__FILE__), 'Laposta Woocommerce', 'Laposta Woocommerce');
+			add_action('admin_menu', array($this, 'add_menu'), 100);
 		}
 
 		// hook into WP's admin_init action hook
 		public function admin_init() { 
 
 			// Set up the settings for this plugin 
-			$this->init_settings(); 
+			$this->init_settings();
+
+			if (date('Y-m-d') < '2024-11-10' && laposta_woocommerce_wc_menu_exists()) {
+				$transientKey = 'laposta_woocommerce_moved_notice';
+				if (!get_transient($transientKey)) {
+					if (isset($_GET['laposta_woocommerce_moved_notice'])) {
+						set_transient($transientKey, 1, 60*60*24*365*10);
+						wp_redirect(admin_url());
+					}
+
+					add_action( 'admin_notices', [$this, 'laposta_woocommerce_moved_notice'] );
+				}
+			}
 		}
 
 		// Initialize some custom settings
@@ -65,12 +74,47 @@ if (!class_exists('Laposta_Woocommerce_Template')) {
 			register_setting('laposta_woocommerce_template-group', 'laposta-checkout-list');
 		}
 
-		// Menu Callback
+		// add a menu
+		public function add_menu() {
+			$actualCapability = apply_filters('laposta_woocommerce_settings_page_capability', 'manage_options');
+			$actualCapability = is_string($actualCapability) ? $actualCapability : 'manage_options';
+
+			if (laposta_woocommerce_wc_menu_exists()){
+				add_submenu_page('woocommerce', 'Laposta Woocommerce', 'Laposta', $actualCapability, 'laposta_woocommerce_options', array(&$this, 'laposta_woocommerce_settings_page'), 100);
+			} else {
+				add_options_page('Laposta Woocommerce', 'Laposta', $actualCapability, 'laposta_woocommerce_options', array(&$this, 'laposta_woocommerce_settings_page'), 100);
+			}
+
+		}
+
+		// Menu Callback 
 		public function laposta_woocommerce_settings_page() {
-			// Render the settings template
-			include(sprintf("%s/templates/settings.php", dirname(__FILE__))); 
+			include(sprintf("%s/templates/settings.php", dirname(__FILE__)));
+		}
+
+		public function laposta_woocommerce_moved_notice() {
+			?>
+			<div class="notice notice-error is-dismissible">
+				<p>
+					Let op: De <a href="admin.php?page=laposta_woocommerce_options">instellingen</a> voor Laposta Woocommerce zijn verplaatst naar WooCommerce -> Laposta.
+					<a href="<?= admin_url().'?laposta_woocommerce_moved_notice' ?>">Verberg melding</a>
+				</p>
+			</div>
+			<?php
 		}
 	}
+}
+
+function laposta_woocommerce_wc_menu_exists()
+{
+	global $menu;
+	foreach ($menu as $item) {
+		if ($item[2] === 'woocommerce') {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 if (class_exists('Laposta_Woocommerce_Template')) {
@@ -83,7 +127,12 @@ if (class_exists('Laposta_Woocommerce_Template')) {
 
 		// Add the settings link to the plugins page
 		function laposta_woocommerce_settings_link($links) {
-			$settings_link = '<a href="options-general.php?page=laposta_woocommerce_options">Settings</a>';
+			if (laposta_woocommerce_wc_menu_exists()){
+				$settings_link = '<a href="admin.php?page=laposta_woocommerce_options">Settings</a>';
+			} else {
+				$settings_link = '<a href="options-general.php?page=laposta_woocommerce_options">Settings</a>';
+			}
+
 			array_unshift($links, $settings_link); 
 			return $links; 
 		}
