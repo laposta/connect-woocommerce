@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) { exit; }
 class Laposta_Woocommerce_Settings {
 
 	private $options;
@@ -7,10 +8,14 @@ class Laposta_Woocommerce_Settings {
 
 	public function __construct($options) {
 
-		$this->options = $options;
+		$this->options = array(
+			'laposta-checkout-title' => isset($options['laposta-checkout-title']) ? $options['laposta-checkout-title'] : '',
+			'laposta-api_key' => isset($options['laposta-api_key']) ? $options['laposta-api_key'] : '',
+			'laposta-checkout-list' => isset($options['laposta-checkout-list']) ? $options['laposta-checkout-list'] : '',
+		);
 
 		// api-key present?
-		if (!$this->options['laposta-api_key']) {
+		if (empty($this->options['laposta-api_key'])) {
 			$this->status = 'no_api_key';
 			return;
 		}
@@ -29,10 +34,8 @@ class Laposta_Woocommerce_Settings {
 		$list = new Laposta_List();
 		try {
 			$result = $list->all();
-			//print '<pre>';print_r($result);print '</pre>';
-
 			// lists present?
-			if (!$result['data']) {
+			if (empty($result['data'])) {
 				$this->status = 'no_lists';
 			} else {
 				$this->lists = $result['data'];
@@ -40,36 +43,27 @@ class Laposta_Woocommerce_Settings {
 			}
 
 		} catch (Exception $e) {
-
 			// information about the error
-			$error = $e->json_body['error'];
-			//print_r($error);
-
-			if ($error) {
-
-				// invalid request?
-				if ($error['type'] == 'invalid_request') {
-
-					// this means api-key is incorrect
-					$this->status = 'invalid_api_key';
-				}
+			$error = isset($e->json_body['error']) ? $e->json_body['error'] : null;
+			if ($error && isset($error['type']) && $error['type'] == 'invalid_request') {
+				// this means api-key is incorrect
+				$this->status = 'invalid_api_key';
 			}
 
 			if (!$this->status) {
-
 				// different exception
-				$this->status = 'error-api: ' . print_r($e, 1);
+				$this->status = 'error-api';
 			}
 		}
 	}
 
 	public function getHtmlTitle() {
-	// html for setting the title
-
+		// html for setting the title
+		$value = esc_attr( $this->options['laposta-checkout-title'] );
 		$html = '
 <tr valign="top">
 	<th scope="row"><label for="laposta-checkout-title">Tekst in Checkout</label></th>
-	<td><input type="text" name="laposta-checkout-title" size="70" id="laposta-checkout-title" value="' . $this->options['laposta-checkout-title'] . '"/></td>
+	<td><input type="text" name="laposta-checkout-title" size="70" id="laposta-checkout-title" value="' . $value . '"/></td>
 </tr>';
 
 		return $html;
@@ -77,19 +71,19 @@ class Laposta_Woocommerce_Settings {
 
 
 	public function getHtmlApiKey() {
-	// html for setting the api-key
-
+		// html for setting the api-key
+		$value = esc_attr( $this->options['laposta-api_key'] );
 		$html = '
 <tr valign="top">
 	<th scope="row"><label for="laposta-api_key">API key</label></th>
-	<td><input type="text" name="laposta-api_key" size="70" id="laposta-api_key" value="' . $this->options['laposta-api_key'] . '" /></td>
+	<td><input type="text" name="laposta-api_key" size="70" id="laposta-api_key" value="' . $value . '" /></td>
 </tr>';
 
 		return $html;
 	}
 
 	public function getHtmlLists() {
-	// html for choosing al list
+		// html for choosing a list
 
 		// start html
 		$html = '<tr valign="top">';
@@ -98,11 +92,9 @@ class Laposta_Woocommerce_Settings {
 
 		// status ok?
 		if ($this->status != 'ok') {
-
 			// not ok, show message
 			$html .= $this->getMessage();
 		} else {
-
 			// ok, show lists
 			$html .= $this->getHtmlListOptions();
 		}
@@ -120,7 +112,6 @@ class Laposta_Woocommerce_Settings {
 		foreach($this->lists as $item) {
 
 			$list = $item['list'];
-			//print_r($list);
 
 			// value is combination of account and list id, to be used in javascript later
 			$value = $list['list_id'];
@@ -134,7 +125,7 @@ class Laposta_Woocommerce_Settings {
 			}
 			$html .= ' />';
 			$html .= '<label for="' . $id . '">';
-			$html .= htmlspecialchars($list['name']);
+			$html .= esc_html($list['name']);
 			$html .= '</label>';
 			$html .= '<br />';
 		}
@@ -143,19 +134,16 @@ class Laposta_Woocommerce_Settings {
 	}
 
 	private function getMessage() {
-	// return message based on status
-
-		if (strpos($this->status, 'error-api') !== false) {
-
-			// something went wrong with the api
-			return 'Contact met de api lukt niet. Mail deze foutmelding naar stijn@laposta.nl voor een oplossing.<br><pre>' . $this->status . '</pre>';
+		// return message based on status
+		if ($this->status === 'error-api') {
+			return 'Contact met de api lukt niet. Mail deze foutmelding naar stijn@laposta.nl voor een oplossing.';
 		}
 		if ($this->status == 'no_api_key') return 'Nog geen api-key ingevuld.';
 		if ($this->status == 'no_curl') return 'Deze plugin heeft de php-curl extensie nodig, maar deze is niet geinstalleerd.';
 		if ($this->status == 'invalid_api_key') return 'Dit is geen geldige api-key.';
 		if ($this->status == 'no_lists') return 'Geen lijsten gevonden.';
 
-		return 'Er is een onbekend probleem opgetreden. Mail deze foutmelding naar stijn@laposta.nl voor een oplossing.<br><pre>' . $this->status . '</pre>';
+		return 'Er is een onbekend probleem opgetreden. Neem contact op met support voor een oplossing.';
 	}
 }
 

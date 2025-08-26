@@ -6,7 +6,7 @@
 Plugin Name: Laposta WooCommerce
 Plugin URI: http://laposta.nl/documentatie/wordpress.524.html
 Description: Laposta is programma waarmee je gemakkelijk en snel nieuwsbrieven kunt maken en versturen. Met deze plugin plaats je snel een optie in de checkout voor een nieuwsbrief registratie.
-Version: 1.9.1
+Version: 1.9.2
 Author: Laposta - Stijn van der Ree
 Author URI: http://laposta.nl/contact
 License: GPLv2 or later
@@ -34,7 +34,7 @@ if ( !function_exists( 'add_action' ) ) {
 	exit;
 }
 
-define('LAPOSTA_WOOCOMMERCE_VERSION', '1.9.1');
+define('LAPOSTA_WOOCOMMERCE_VERSION', '1.9.2');
 define('LAPOSTA_WOOCOMMERCE_PLUGIN_URL', plugin_dir_url( __FILE__ ));
 
 
@@ -52,26 +52,20 @@ if (!class_exists('Laposta_Woocommerce_Template')) {
 
 			// Set up the settings for this plugin 
 			$this->init_settings();
-
-			if (date('Y-m-d') < '2024-11-10' && laposta_woocommerce_wc_menu_exists()) {
-				$transientKey = 'laposta_woocommerce_moved_notice';
-				if (!get_transient($transientKey)) {
-					if (isset($_GET['laposta_woocommerce_moved_notice'])) {
-						set_transient($transientKey, 1, 60*60*24*365*10);
-						wp_redirect(admin_url());
-					}
-
-					add_action( 'admin_notices', [$this, 'laposta_woocommerce_moved_notice'] );
-				}
-			}
 		}
 
 		// Initialize some custom settings
 		public function init_settings() {
-			// register the settings for this plugin
-			register_setting('laposta_woocommerce_template-group', 'laposta-checkout-title');
-			register_setting('laposta_woocommerce_template-group', 'laposta-api_key');
-			register_setting('laposta_woocommerce_template-group', 'laposta-checkout-list');
+			// register the settings for this plugin with sanitization
+			register_setting('laposta_woocommerce_template-group', 'laposta-checkout-title', array(
+				'sanitize_callback' => 'sanitize_text_field',
+			));
+			register_setting('laposta_woocommerce_template-group', 'laposta-api_key', array(
+				'sanitize_callback' => 'sanitize_text_field',
+			));
+			register_setting('laposta_woocommerce_template-group', 'laposta-checkout-list', array(
+				'sanitize_callback' => 'sanitize_text_field',
+			));
 		}
 
 		// add a menu
@@ -92,16 +86,6 @@ if (!class_exists('Laposta_Woocommerce_Template')) {
 			include(sprintf("%s/templates/settings.php", dirname(__FILE__)));
 		}
 
-		public function laposta_woocommerce_moved_notice() {
-			?>
-			<div class="notice notice-error is-dismissible">
-				<p>
-					Let op: De <a href="admin.php?page=laposta_woocommerce_options">instellingen</a> voor Laposta Woocommerce zijn verplaatst naar WooCommerce -> Laposta.
-					<a href="<?= admin_url().'?laposta_woocommerce_moved_notice' ?>">Verberg melding</a>
-				</p>
-			</div>
-			<?php
-		}
 	}
 }
 
@@ -154,73 +138,75 @@ if (!class_exists('Laposta_Subscribe')) {
         }
 
         public static function addFieldToCheckout($fields) {
-            $checkoutText = get_option('laposta-checkout-title', 'Schrijf me in voor de nieuwsbrief.');
+			$checkoutText = get_option('laposta-checkout-title', 'Schrijf me in voor de nieuwsbrief.');
+			$checkoutText = sanitize_text_field( $checkoutText );
 
-            if($checkoutText == ''){
-                $checkoutText = 'Schrijf me in voor de nieuwsbrief.';
-            }
+			if($checkoutText === ''){
+				$checkoutText = 'Schrijf me in voor de nieuwsbrief.';
+			}
 
-            // add field at end of billing fields section
-            $fields['billing']['nieuwsbrief_signup'] = array(
-                'type' => 'checkbox',
-                'label' => $checkoutText,
-                'placeholder' => 'Schrijf me in voor de nieuwsbrief.',
-                'required' => false,
-                'class' => array(),
-                'label_class' => array(),
-            );
+			// add field at end of billing fields section
+			$fields['billing']['nieuwsbrief_signup'] = array(
+				'type' => 'checkbox',
+				'label' => $checkoutText,
+				'placeholder' => 'Schrijf me in voor de nieuwsbrief.',
+				'required' => false,
+				'class' => array(),
+				'label_class' => array(),
+			);
 
-            return $fields;
-        }
+			return $fields;
+		}
 
         /**
          * save custom order fields
          * @param int $order_id
          */
         public static function actionWooCheckoutUpdateOrderMeta($order_id) {
-            $checkoutText = get_option('laposta-checkout-title', 'Schrijf me in voor de nieuwsbrief.');
-            $list = get_option('laposta-checkout-list');
-            $apiKey = get_option('laposta-api_key');
+			$checkoutText = get_option('laposta-checkout-title', 'Schrijf me in voor de nieuwsbrief.');
+			$checkoutText = sanitize_text_field( $checkoutText );
+			$list = sanitize_text_field( get_option('laposta-checkout-list') );
+			$apiKey = sanitize_text_field( get_option('laposta-api_key') );
 
-            if($checkoutText == ''){
-                $checkoutText = 'Schrijf me in voor de nieuwsbrief.';
-            }
+			if(!$checkoutText){
+				$checkoutText = 'Schrijf me in voor de nieuwsbrief.';
+			}
 
-            if(isset($list) && $list !== '') {
-                $subscribe = isset($_POST['nieuwsbrief_signup']) ? 'ja' : 'nee';
-                update_post_meta($order_id, $checkoutText, $subscribe);
+			if(isset($list) && $list !== '') {
+				$subscribe = isset($_POST['nieuwsbrief_signup']) ? 'ja' : 'nee';
+				update_post_meta($order_id, $checkoutText, $subscribe);
 
-                // connect to API
-                if(isset($_POST['nieuwsbrief_signup'])) {
+				// connect to API
+				if(isset($_POST['nieuwsbrief_signup'])) {
 
-                    // sanatize input
-                    $ip = $_SERVER['REMOTE_ADDR'];
-                    if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-                        $ip = '127.0.0.1';
-                    }
-		    $email = sanitize_email($_POST['billing_email']);
-		    $first_name = sanitize_text_field($_POST['billing_first_name']);
-		    $last_name = sanitize_text_field($_POST['billing_last_name']); 
+					// sanitize input
+					$ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+					if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+						$ip = '127.0.0.1';
+					}
+                    $email = isset($_POST['billing_email']) ? sanitize_email($_POST['billing_email']) : '';
+                    $first_name = isset($_POST['billing_first_name']) ? sanitize_text_field($_POST['billing_first_name']) : '';
+                    $last_name = isset($_POST['billing_last_name']) ? sanitize_text_field($_POST['billing_last_name']) : '';
 
-                    require_once("includes/laposta-php-1.2/lib/Laposta.php");
-                    Laposta::setApiKey($apiKey);
-                    $member = new Laposta_Member($list);
-                    $data = [
-                        'ip' => $ip,
-                        'email' => $email,
-                        'custom_fields' => array(
-                            'voornaam' => $first_name,
-                            'achternaam' => $last_name
-                        )
-                    ];
-		    try {
-			    $member->create($data);
-		    } catch (Exception $e) {
-			// ignore
-		    }
-                }
-            }
-        }
+					require_once("includes/laposta-php-1.2/lib/Laposta.php");
+					Laposta::setApiKey($apiKey);
+					$member = new Laposta_Member($list);
+					$data = [
+						'ip' => $ip,
+						'email' => $email,
+						'custom_fields' => array(
+							'voornaam' => $first_name,
+							'achternaam' => $last_name
+						)
+					];
+			    try {
+				    $member->create($data);
+			    } catch (Exception $e) {
+				    // ignore
+			    }
+				}
+			}
+		}
 
         /**
          * add our custom fields to WooCommerce order emails
