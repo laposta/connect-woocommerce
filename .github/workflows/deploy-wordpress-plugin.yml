@@ -17,5 +17,6 @@ jobs:
       - name: Deploy to WordPress.org
         uses: 10up/action-wordpress-plugin-deploy@stable
         env:
+          SLUG: laposta-woocommerce
           SVN_USERNAME: ${{ secrets.WORDPRESS_SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.WORDPRESS_SVN_PASSWORD }}
