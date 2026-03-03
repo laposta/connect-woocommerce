@@ -6,7 +6,7 @@
 Plugin Name: Laposta WooCommerce
 Plugin URI: http://laposta.nl/documentatie/wordpress.524.html
 Description: Laposta is programma waarmee je gemakkelijk en snel nieuwsbrieven kunt maken en versturen. Met deze plugin plaats je snel een optie in de checkout voor een nieuwsbrief registratie.
-Version: 1.10.0
+Version: 1.10.1
 Author: Laposta - Stijn van der Ree
 Author URI: http://laposta.nl/contact
 License: GPLv2 or later
@@ -34,7 +34,7 @@ if ( !function_exists( 'add_action' ) ) {
 	exit;
 }
 
-define('LAPOSTA_WOOCOMMERCE_VERSION', '1.10.0');
+define('LAPOSTA_WOOCOMMERCE_VERSION', '1.10.1');
 define('LAPOSTA_WOOCOMMERCE_PLUGIN_URL', plugin_dir_url( __FILE__ ));
 
 
@@ -226,34 +226,33 @@ if (class_exists('Laposta_Subscribe')) {
     $lapostaSubscribe = new Laposta_Subscribe();
 }
 
-function laposta_woocommerce_drop_support_warning() {
+function laposta_woocommerce_continued_support_notice() {
 	?>
-	<div class="notice notice-error is-dismissible_ laposta-woocommerce-drop-support-warning">
+	<div class="notice notice-success is-dismissible_ laposta-woocommerce-continued-support-notice">
 		<p>
-            Let op: de ondersteuning voor de plugin <b>Laposta WooCommerce</b> stopt per direct. <br>
-            Als alternatief kun je de externe plugin "Laposta for WooCommerce" gebruiken: <br>
-			<a href="https://docs.laposta.nl/article/1236-plugin-laposta-for-woocommerce" target="_blank" rel="noopener noreferrer">https://docs.laposta.nl/article/1236-plugin-laposta-for-woocommerce</a><br>
-			<a href="<?= admin_url().'?hide_laposta_woocommerce_drop_support_message' ?>">Verberg melding</a>
+            Goed nieuws: vanwege de vele verzoeken blijven we de plugin <b>Laposta WooCommerce</b> ondersteunen. <br>
+            Bedankt voor alle feedback en aanvragen!<br>
+			<a href="<?= admin_url() . '?hide_laposta_woocommerce_continued_support_message=1' ?>">Verberg melding</a>
 		</p>
 		<p>
-            Please note: support for the plugin <b>Laposta WooCommerce</b> has been discontinued effective immediately. <br>
-            As an alternative, you can use the third-party plugin "Laposta for WooCommerce": <br>
-			<a href="https://docs.laposta.nl/article/1236-plugin-laposta-for-woocommerce" target="_blank" rel="noopener noreferrer">https://docs.laposta.nl/article/1236-plugin-laposta-for-woocommerce</a><br>
-			<a href="<?= admin_url().'?hide_laposta_woocommerce_drop_support_message' ?>">Hide notification</a>
+            Good news: because of the many requests we received, we will continue supporting the <b>Laposta WooCommerce</b> plugin. <br>
+            Thank you for all your feedback and requests!<br>
+			<a href="<?= admin_url() . '?hide_laposta_woocommerce_continued_support_message=1' ?>">Hide notification</a>
 		</p>
 	</div>
 	<?php
 }
 
 function laposta_woocommerce_admin_init() {
-	$transientKey = 'laposta_woocommerce_drop_support_message';
+	$transientKey = 'laposta_woocommerce_continued_support_message';
 	if (!get_transient($transientKey)) {
-		if (isset($_GET['hide_laposta_woocommerce_drop_support_message'])) {
-			set_transient($transientKey, 1, 60*60*24*30);
+		if (isset($_GET['hide_laposta_woocommerce_continued_support_message'])) {
+			set_transient($transientKey, 1, YEAR_IN_SECONDS);
 			wp_redirect(admin_url());
+			exit;
 		}
 
-		add_action('admin_notices', 'laposta_woocommerce_drop_support_warning');
+		add_action('admin_notices', 'laposta_woocommerce_continued_support_notice');
 	}
 }
 add_action('admin_init', 'laposta_woocommerce_admin_init');
