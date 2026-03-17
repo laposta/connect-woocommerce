@@ -26,14 +26,9 @@ class Laposta_Woocommerce_Settings {
 			return;
 		}
 
-		// include laposta api wrapper
-		include(sprintf("%s/../includes/laposta-php-1.2/lib/Laposta.php", dirname(__FILE__))); 
-		Laposta::setApiKey($this->options['laposta-api_key']);
-
 		// try to fetch lists
-		$list = new Laposta_List();
 		try {
-			$result = $list->all();
+			$result = LapostaWoocommerceLapostaApi::getLists($this->options['laposta-api_key']);
 			// lists present?
 			if (empty($result['data'])) {
 				$this->status = 'no_lists';
@@ -42,9 +37,22 @@ class Laposta_Woocommerce_Settings {
 				$this->status = 'ok';
 			}
 
-		} catch (Exception $e) {
+		} catch (\Throwable $e) {
 			// information about the error
-			$error = isset($e->json_body['error']) ? $e->json_body['error'] : null;
+			$error = null;
+			if (isset($e->json_body['error'])) {
+				$error = $e->json_body['error'];
+			} elseif (method_exists($e, 'getResponseData')) {
+				$response_data = $e->getResponseData();
+				if (isset($response_data['error'])) {
+					$error = $response_data['error'];
+				}
+			} elseif (method_exists($e, 'getResponseBody')) {
+				$response_body = json_decode((string) $e->getResponseBody(), true);
+				if (isset($response_body['error'])) {
+					$error = $response_body['error'];
+				}
+			}
 			if ($error && isset($error['type']) && $error['type'] == 'invalid_request') {
 				// this means api-key is incorrect
 				$this->status = 'invalid_api_key';

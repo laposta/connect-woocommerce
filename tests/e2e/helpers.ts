@@ -5,6 +5,13 @@ export const WOO_PLUGIN_FILE = 'woocommerce/woocommerce.php';
 export const SETTINGS_PAGE = 'laposta_woocommerce_options';
 const CHECKOUT_URLS = parseCheckoutUrls(process.env.LWC_E2E_CHECKOUT_URLS, ['/checkout/', '/afrekenen/']);
 const CHECKBOX_LABEL_PREFIX = process.env.LWC_E2E_CHECKBOX_LABEL_PREFIX || 'Laposta WooCommerce E2E';
+const API_KEY_FALLBACK = process.env.LWC_API_KEY || '';
+const TEST_LIST_ID_FALLBACK = process.env.LWC_TEST_LIST_ID || '';
+
+export type LapostaConfig = {
+  apiKey: string;
+  listId: string;
+};
 
 export async function ensurePluginActive(page: Page) {
   await ensurePluginFileActive(page, PLUGIN_FILE);
@@ -55,6 +62,61 @@ export function buildCheckboxLabel(): string {
   return `${CHECKBOX_LABEL_PREFIX} ${Date.now()}`;
 }
 
+export function buildRandomEmail(): string {
+  const randomPart = Math.random().toString(36).slice(2, 10);
+  return `laposta-woocommerce-e2e+${Date.now()}-${randomPart}@example.com`;
+}
+
+export async function resolveLapostaConfig(page: Page): Promise<LapostaConfig> {
+  await gotoSettingsPage(page);
+
+  const apiKeyInput = page.locator('#laposta-api_key');
+  let apiKey = (await apiKeyInput.inputValue()).trim();
+  let didUpdateSettings = false;
+
+  if (!apiKey && API_KEY_FALLBACK) {
+    await apiKeyInput.fill(API_KEY_FALLBACK);
+    apiKey = API_KEY_FALLBACK;
+    didUpdateSettings = true;
+  }
+
+  const selectedList = page.locator('input[name="laposta-checkout-list"]:checked').first();
+  let listId = '';
+  if (await selectedList.count()) {
+    listId = (await selectedList.inputValue()).trim();
+  }
+
+  if (!listId && TEST_LIST_ID_FALLBACK) {
+    const fallbackRadio = page.locator(`input[name="laposta-checkout-list"][value="${TEST_LIST_ID_FALLBACK}"]`).first();
+    if (await fallbackRadio.count()) {
+      await fallbackRadio.check();
+      listId = TEST_LIST_ID_FALLBACK;
+      didUpdateSettings = true;
+    }
+  }
+
+  if (didUpdateSettings) {
+    await saveSettings(page);
+    await gotoSettingsPage(page);
+
+    apiKey = (await page.locator('#laposta-api_key').inputValue()).trim();
+    const refreshedSelectedList = page.locator('input[name="laposta-checkout-list"]:checked').first();
+    if (await refreshedSelectedList.count()) {
+      listId = (await refreshedSelectedList.inputValue()).trim();
+    }
+  }
+
+  if (!apiKey) {
+    throw new Error('No Laposta API key configured for the WooCommerce plugin.');
+  }
+
+  if (!listId) {
+    throw new Error('No Laposta list configured for the WooCommerce plugin.');
+  }
+
+  return { apiKey, listId };
+}
+
 export async function getFirstStoreProductId(page: Page): Promise<number> {
   const response = await page.request.get('/wp-json/wc/store/v1/products?per_page=1');
   expect(response.ok()).toBeTruthy();
@@ -80,6 +142,80 @@ export async function openCheckoutWithProduct(page: Page, productId: number) {
   throw new Error('Could not open a classic WooCommerce checkout form.');
 }
 
+export async function placeWooOrder(page: Page, email: string, options: { subscribe: boolean }) {
+  await fillCheckoutField(page, '#billing_first_name', 'Laposta');
+  await fillCheckoutField(page, '#billing_last_name', 'E2E');
+  await fillCheckoutField(page, '#billing_address_1', 'Teststraat 1');
+  await fillCheckoutField(page, '#billing_postcode', '1011AB');
+  await fillCheckoutField(page, '#billing_city', 'Amsterdam');
+  await fillCheckoutField(page, '#billing_phone', '0612345678');
+  await fillCheckoutField(page, '#billing_email', email);
+
+  const checkbox = page.locator('#nieuwsbrief_signup');
+  await expect(checkbox).toBeVisible();
+  if (options.subscribe) {
+    await checkbox.check();
+  } else {
+    await checkbox.uncheck();
+  }
+
+  await Promise.all([
+    page.waitForURL(/order-received|bestelling-ontvangen/i, { timeout: 30000 }),
+    page.locator('#place_order').click(),
+  ]);
+}
+
+export async function findLapostaMember(config: LapostaConfig, email: string) {
+  const response = await fetch(`https://api.laposta.nl/v2/member?list_id=${encodeURIComponent(config.listId)}`, {
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${config.apiKey}:`).toString('base64')}`,
+    },
+  });
+
+  const body = (await response.json()) as {
+    data?: Array<{ member?: { member_id?: string; email?: string } }>;
+    error?: { message?: string };
+  };
+
+  if (!response.ok) {
+    throw new Error(`Laposta API request failed: ${body.error?.message || response.statusText}`);
+  }
+
+  return body.data?.find((entry) => entry.member?.email === email) || null;
+}
+
+export async function deleteLapostaMemberIfExists(config: LapostaConfig, email: string) {
+  const member = await findLapostaMember(config, email);
+  const memberId = member?.member?.member_id;
+  if (!memberId) {
+    return;
+  }
+
+  const response = await fetch(
+    `https://api.laposta.nl/v2/member/${encodeURIComponent(memberId)}?list_id=${encodeURIComponent(config.listId)}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${config.apiKey}:`).toString('base64')}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const body = (await response.json()) as { error?: { message?: string } };
+    throw new Error(`Laposta member cleanup failed: ${body.error?.message || response.statusText}`);
+  }
+}
+
+export async function expectLapostaMemberState(config: LapostaConfig, email: string, shouldExist: boolean) {
+  await expect
+    .poll(async () => {
+      const member = await findLapostaMember(config, email);
+      return Boolean(member?.member?.member_id);
+    }, { timeout: 15000, intervals: [500, 1000, 2000] })
+    .toBe(shouldExist);
+}
+
 function parseCheckoutUrls(rawValue: string | undefined, fallback: string[]): string[] {
   if (!rawValue) {
     return fallback;
@@ -101,4 +237,10 @@ function normalizePath(input: string): string {
 
   const withLeadingSlash = value.startsWith('/') ? value : `/${value}`;
   return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`;
+}
+
+async function fillCheckoutField(page: Page, selector: string, value: string) {
+  const field = page.locator(selector);
+  await expect(field).toBeVisible();
+  await field.fill(value);
 }

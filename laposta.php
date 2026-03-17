@@ -6,7 +6,7 @@
 Plugin Name: Laposta WooCommerce
 Plugin URI: http://laposta.nl/documentatie/wordpress.524.html
 Description: Laposta is programma waarmee je gemakkelijk en snel nieuwsbrieven kunt maken en versturen. Met deze plugin plaats je snel een optie in de checkout voor een nieuwsbrief registratie.
-Version: 1.10.1
+Version: 1.10.2
 Author: Laposta - Stijn van der Ree
 Author URI: http://laposta.nl/contact
 License: GPLv2 or later
@@ -34,8 +34,10 @@ if ( !function_exists( 'add_action' ) ) {
 	exit;
 }
 
-define('LAPOSTA_WOOCOMMERCE_VERSION', '1.10.1');
+define('LAPOSTA_WOOCOMMERCE_VERSION', '1.10.2');
 define('LAPOSTA_WOOCOMMERCE_PLUGIN_URL', plugin_dir_url( __FILE__ ));
+
+require_once __DIR__ . '/includes/LapostaWoocommerceLapostaApi.php';
 
 
 
@@ -133,7 +135,7 @@ if (!class_exists('Laposta_Subscribe')) {
 
         public function __construct() {
             add_filter('woocommerce_checkout_fields', array($this, 'addFieldToCheckout'));
-            add_action('woocommerce_checkout_update_order_meta', array($this, 'actionWooCheckoutUpdateOrderMeta'));
+            add_action('woocommerce_checkout_order_processed', array($this, 'actionWooCheckoutOrderProcessed'), 10, 3);
             add_filter('woocommerce_email_order_meta_keys', array($this, 'filterWooEmailOrderMetaKeys'));
         }
 
@@ -162,7 +164,7 @@ if (!class_exists('Laposta_Subscribe')) {
          * save custom order fields
          * @param int $order_id
          */
-        public static function actionWooCheckoutUpdateOrderMeta($order_id) {
+        public static function actionWooCheckoutOrderProcessed($order_id, $posted_data = array(), $order = null) {
 			$checkoutText = get_option('laposta-checkout-title', 'Schrijf me in voor de nieuwsbrief.');
 			$checkoutText = sanitize_text_field( $checkoutText );
 			$list = sanitize_text_field( get_option('laposta-checkout-list') );
@@ -173,36 +175,45 @@ if (!class_exists('Laposta_Subscribe')) {
 			}
 
 			if(isset($list) && $list !== '') {
-				$subscribe = isset($_POST['nieuwsbrief_signup']) ? 'ja' : 'nee';
-				update_post_meta($order_id, $checkoutText, $subscribe);
+				if (!is_array($posted_data)) {
+					$posted_data = array();
+				}
+
+				$rawSubscribe = '';
+				if (isset($posted_data['nieuwsbrief_signup'])) {
+					$rawSubscribe = sanitize_text_field( wp_unslash( $posted_data['nieuwsbrief_signup'] ) );
+				} elseif (isset($_POST['nieuwsbrief_signup'])) {
+					$rawSubscribe = sanitize_text_field( wp_unslash( $_POST['nieuwsbrief_signup'] ) );
+				}
+				$subscribe = !in_array($rawSubscribe, array('', '0', 'false', 'no', 'off'), true);
+				if (defined('WP_DEBUG') && WP_DEBUG) {
+					error_log('Laposta WooCommerce checkout: order=' . $order_id . ' subscribe=' . ($subscribe ? 'yes' : 'no') . ' raw=' . $rawSubscribe . ' list=' . $list);
+				}
+				update_post_meta($order_id, $checkoutText, $subscribe ? 'ja' : 'nee');
 
 				// connect to API
-				if(isset($_POST['nieuwsbrief_signup'])) {
+				if($subscribe) {
+					$email = isset($_POST['billing_email']) ? sanitize_email( wp_unslash( $_POST['billing_email'] ) ) : '';
+					$first_name = isset($_POST['billing_first_name']) ? sanitize_text_field( wp_unslash( $_POST['billing_first_name'] ) ) : '';
+					$last_name = isset($_POST['billing_last_name']) ? sanitize_text_field( wp_unslash( $_POST['billing_last_name'] ) ) : '';
+					$ip = isset($_SERVER['REMOTE_ADDR']) && filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
 
-					// sanitize input
-					$ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-					if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-						$ip = '127.0.0.1';
-					}
-                    $email = isset($_POST['billing_email']) ? sanitize_email($_POST['billing_email']) : '';
-                    $first_name = isset($_POST['billing_first_name']) ? sanitize_text_field($_POST['billing_first_name']) : '';
-                    $last_name = isset($_POST['billing_last_name']) ? sanitize_text_field($_POST['billing_last_name']) : '';
-
-					require_once("includes/laposta-php-1.2/lib/Laposta.php");
-					Laposta::setApiKey($apiKey);
-					$member = new Laposta_Member($list);
-					$data = [
+			    try {
+				    $result = LapostaWoocommerceLapostaApi::createMember($apiKey, $list, array(
 						'ip' => $ip,
 						'email' => $email,
 						'custom_fields' => array(
 							'voornaam' => $first_name,
-							'achternaam' => $last_name
-						)
-					];
-			    try {
-				    $member->create($data);
-			    } catch (Exception $e) {
-				    // ignore
+							'achternaam' => $last_name,
+						),
+					));
+					if (defined('WP_DEBUG') && WP_DEBUG) {
+						error_log('Laposta WooCommerce subscribe success: order=' . $order_id . ' email=' . $email . ' member_id=' . (isset($result['member']['member_id']) ? $result['member']['member_id'] : ''));
+					}
+			    } catch (\Throwable $e) {
+					if (defined('WP_DEBUG') && WP_DEBUG) {
+						error_log('Laposta WooCommerce subscribe error: order=' . $order_id . ' email=' . $email . ' message=' . $e->getMessage());
+					}
 			    }
 				}
 			}

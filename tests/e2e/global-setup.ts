@@ -18,12 +18,14 @@ async function globalSetup(config: FullConfig) {
   const context = await browser.newContext({ baseURL, ignoreHTTPSErrors: true });
   const page = await context.newPage();
 
-  await page.goto('/wp-login.php');
+  await page.goto('/wp-login.php', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#user_login', { state: 'visible', timeout: 30_000 });
   await page.fill('#user_login', adminUser);
   await page.fill('#user_pass', adminPass);
-  await page.click('#wp-submit');
-
-  await page.waitForURL(/\/wp-admin/i, { timeout: 20_000 });
+  await Promise.all([
+    page.waitForURL(/\/wp-admin/i, { timeout: 20_000, waitUntil: 'domcontentloaded' }),
+    page.click('#wp-submit'),
+  ]);
   await page.context().storageState({ path: storageState });
 
   await browser.close();
