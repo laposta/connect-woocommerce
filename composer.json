@@ -1,0 +1,32 @@
+{
+    "name": "laposta/laposta-woocommerce",
+    "description": "WordPress plugin that adds a Laposta newsletter signup checkbox to WooCommerce checkout.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "homepage": "http://laposta.nl/documentatie/wordpress.524.html",
+    "authors": [
+        {
+            "name": "Laposta",
+            "homepage": "https://laposta.nl/contact"
+        }
+    ],
+    "keywords": [
+        "wordpress",
+        "plugin",
+        "laposta",
+        "woocommerce",
+        "newsletter",
+        "checkout"
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "autoload": {
+        "files": [
+            "autoload.php"
+        ]
+    },
+    "extra": {
+        "installer-name": "laposta-woocommerce"
+    }
+}
