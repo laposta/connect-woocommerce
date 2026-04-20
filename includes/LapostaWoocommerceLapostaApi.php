@@ -4,7 +4,7 @@ if (!class_exists('LapostaWoocommerceLapostaApi')) {
 	class LapostaWoocommerceLapostaApi {
 
 		public static function useApiV2() {
-			return PHP_VERSION_ID >= 80000;
+			return PHP_VERSION_ID >= 80100;
 		}
 
 		public static function getLists($api_key) {

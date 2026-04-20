@@ -4,7 +4,7 @@ Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
 Tested up to: 6.9
 Requires PHP: 7.1
-Stable tag: 1.11.0
+Stable tag: 1.11.1
 License: GPLv2 or later
 
 This plugin can be used to add an optin checkbox to receive newsletters, using
@@ -14,7 +14,7 @@ Laposta newsletter software (https://laposta.nl).
 
 Laposta is a Dutch emailmarketing solution. Use this plugin to add an optin checkbox to your checkout,
 so your customers can subscribe to your newsletter.
-On PHP 8 and newer, the plugin uses the Laposta API v2 wrapper for compatibility.
+On PHP 8.1 and newer, the plugin uses the Laposta API v2 wrapper for compatibility.
 
 == Installation ==
 
@@ -23,11 +23,13 @@ Plugins screen. Then go to the Settings to setup the connection to Laposta.
 
 == Upgrade Notice ==
 
-= 1.11.0 =
-* Added: Composer package metadata for Composer-managed installs.
-* Changed: Moved the version-scoped Laposta API v2 autoloader into the main plugin bootstrap.
+= 1.11.1 =
+* Fixed: Corrected the Laposta API v2 PHP threshold to PHP 8.1 and newer. PHP 8.0 now correctly continues to use the legacy wrapper.
 
 == Changelog ==
+= 1.11.1 =
+* Fixed: Corrected the Laposta API v2 PHP threshold to PHP 8.1 and newer. PHP 8.0 now correctly continues to use the legacy wrapper.
+
 = 1.11.0 =
 * Added: Composer package metadata for Composer-managed installs.
 * Changed: Moved the version-scoped Laposta API v2 autoloader into the main plugin bootstrap.
