@@ -6,7 +6,7 @@
 Plugin Name: Laposta WooCommerce
 Plugin URI: http://laposta.nl/documentatie/wordpress.524.html
 Description: Laposta is programma waarmee je gemakkelijk en snel nieuwsbrieven kunt maken en versturen. Met deze plugin plaats je snel een optie in de checkout voor een nieuwsbrief registratie.
-Version: 1.11.1
+Version: 1.11.2
 Author: Laposta - Stijn van der Ree
 Author URI: http://laposta.nl/contact
 License: GPLv2 or later
@@ -35,7 +35,7 @@ if ( !function_exists( 'add_action' ) ) {
 }
 
 if (!defined('LAPOSTA_WOOCOMMERCE_VERSION')) {
-	define('LAPOSTA_WOOCOMMERCE_VERSION', '1.11.1');
+	define('LAPOSTA_WOOCOMMERCE_VERSION', '1.11.2');
 }
 define('LAPOSTA_WOOCOMMERCE_PLUGIN_URL', plugin_dir_url( __FILE__ ));
 
@@ -239,34 +239,3 @@ if (class_exists('Laposta_Subscribe')) {
     // instantiate the plugin class
     $lapostaSubscribe = new Laposta_Subscribe();
 }
-
-function laposta_woocommerce_continued_support_notice() {
-	?>
-	<div class="notice notice-success is-dismissible_ laposta-woocommerce-continued-support-notice">
-		<p>
-            Goed nieuws: vanwege de vele verzoeken blijven we de plugin <b>Laposta WooCommerce</b> ondersteunen. <br>
-            Bedankt voor alle feedback en aanvragen!<br>
-			<a href="<?= admin_url() . '?hide_laposta_woocommerce_continued_support_message=1' ?>">Verberg melding</a>
-		</p>
-		<p>
-            Good news: because of the many requests we received, we will continue supporting the <b>Laposta WooCommerce</b> plugin. <br>
-            Thank you for all your feedback and requests!<br>
-			<a href="<?= admin_url() . '?hide_laposta_woocommerce_continued_support_message=1' ?>">Hide notification</a>
-		</p>
-	</div>
-	<?php
-}
-
-function laposta_woocommerce_admin_init() {
-	$transientKey = 'laposta_woocommerce_continued_support_message';
-	if (!get_transient($transientKey)) {
-		if (isset($_GET['hide_laposta_woocommerce_continued_support_message'])) {
-			set_transient($transientKey, 1, YEAR_IN_SECONDS);
-			wp_redirect(admin_url());
-			exit;
-		}
-
-		add_action('admin_notices', 'laposta_woocommerce_continued_support_notice');
-	}
-}
-add_action('admin_init', 'laposta_woocommerce_admin_init');

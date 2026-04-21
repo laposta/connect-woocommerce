@@ -4,7 +4,7 @@ Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
 Tested up to: 6.9
 Requires PHP: 7.1
-Stable tag: 1.11.1
+Stable tag: 1.11.2
 License: GPLv2 or later
 
 This plugin can be used to add an optin checkbox to receive newsletters, using
@@ -23,10 +23,13 @@ Plugins screen. Then go to the Settings to setup the connection to Laposta.
 
 == Upgrade Notice ==
 
-= 1.11.1 =
-* Fixed: Corrected the Laposta API v2 PHP threshold to PHP 8.1 and newer. PHP 8.0 now correctly continues to use the legacy wrapper.
+= 1.11.2 =
+* Changed: Removed the admin notice about continued support.
 
 == Changelog ==
+= 1.11.2 =
+* Changed: Removed the admin notice about continued support.
+
 = 1.11.1 =
 * Fixed: Corrected the Laposta API v2 PHP threshold to PHP 8.1 and newer. PHP 8.0 now correctly continues to use the legacy wrapper.
 
