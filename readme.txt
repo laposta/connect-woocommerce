@@ -2,9 +2,9 @@
 Contributors: stijnvanderree, roelbousardt
 Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.1
-Stable tag: 1.11.3
+Stable tag: 1.12.0
 License: GPLv2 or later
 
 This plugin can be used to add an optin checkbox to receive newsletters, using
@@ -15,6 +15,17 @@ Laposta newsletter software (https://laposta.nl).
 Laposta is a Dutch emailmarketing solution. Use this plugin to add an optin checkbox to your checkout,
 so your customers can subscribe to your newsletter.
 On PHP 8.1 and newer, the plugin uses the Laposta API v2 wrapper for compatibility.
+Checkout Block integration is available with WooCommerce 8.9 and newer. Earlier WooCommerce versions continue to use the classic checkout integration.
+
+== Developer filter ==
+
+The Checkout Block renders all fields registered for the `order` location inside its Additional information section. The section itself can be moved in the block editor.
+
+Developers can influence the Laposta field's relative order within that section with the `laposta_woocommerce_checkout_block_field_priority` filter. Lower values register the field earlier; the default is `10`:
+
+`add_filter( 'laposta_woocommerce_checkout_block_field_priority', function() { return 5; } );`
+
+This filter only influences the Laposta field relative to other registered order fields. It does not move the Additional information section or provide an absolute position when another extension uses the same priority.
 
 == Installation ==
 
@@ -23,10 +34,18 @@ Plugins screen. Then go to the Settings to setup the connection to Laposta.
 
 == Upgrade Notice ==
 
-= 1.11.3 =
-- Tested up to WordPress 7.0
+= 1.12.0 =
+- Added native support for the WooCommerce Checkout Block while retaining classic checkout support.
+- Added a developer filter for influencing the field's relative order within Additional information.
 
 == Changelog ==
+= 1.12.0 =
+* Added: Support for the WooCommerce Checkout Block while retaining classic checkout support.
+* Added: Developer filter for influencing the Laposta field's relative order within the Checkout Block's Additional information section.
+* Changed: Checkout subscriptions now use a shared, idempotent order-processing path.
+* Compatibility: Checkout Block integration requires WooCommerce 8.9 or newer; earlier versions continue to use the classic checkout integration.
+* Compatibility: Tested with WordPress 7.1 and WooCommerce 11.0.1.
+
 = 1.11.3 =
 - Tested up to WordPress 7.0
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { buildCheckboxLabel, ensurePluginActive, gotoSettingsPage, saveSettings } from './helpers';
+import { buildCheckboxLabel, ensurePluginActive, gotoSettingsPage, withCheckoutLabel } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await ensurePluginActive(page);
@@ -16,11 +16,9 @@ test('settings page renders with expected fields', async ({ page }) => {
 });
 
 test('checkout title can be saved and remains persisted', async ({ page }) => {
-  await gotoSettingsPage(page);
-
   const value = buildCheckboxLabel();
-  await page.locator('#laposta-checkout-title').fill(value);
-
-  await saveSettings(page);
-  await expect(page.locator('#laposta-checkout-title')).toHaveValue(value);
+  await withCheckoutLabel(page, value, async () => {
+    await gotoSettingsPage(page);
+    await expect(page.locator('#laposta-checkout-title')).toHaveValue(value);
+  });
 });
