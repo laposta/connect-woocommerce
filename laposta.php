@@ -6,7 +6,7 @@
 Plugin Name: Laposta WooCommerce
 Plugin URI: http://laposta.nl/documentatie/wordpress.524.html
 Description: Laposta is programma waarmee je gemakkelijk en snel nieuwsbrieven kunt maken en versturen. Met deze plugin plaats je snel een optie in de checkout voor een nieuwsbrief registratie.
-Version: 1.12.0
+Version: 1.12.1
 WC tested up to: 11.0
 Author: Laposta - Stijn van der Ree
 Author URI: http://laposta.nl/contact
@@ -36,7 +36,7 @@ if ( !function_exists( 'add_action' ) ) {
 }
 
 if (!defined('LAPOSTA_WOOCOMMERCE_VERSION')) {
-	define('LAPOSTA_WOOCOMMERCE_VERSION', '1.12.0');
+	define('LAPOSTA_WOOCOMMERCE_VERSION', '1.12.1');
 }
 define('LAPOSTA_WOOCOMMERCE_PLUGIN_URL', plugin_dir_url( __FILE__ ));
 
@@ -46,11 +46,12 @@ require_once __DIR__ . '/autoload.php';
 add_action('before_woocommerce_init', 'laposta_woocommerce_declare_checkout_block_compatibility');
 
 /**
- * Declare support for WooCommerce's Cart and Checkout blocks.
+ * Declare support for WooCommerce's Cart and Checkout blocks and HPOS.
  */
 function laposta_woocommerce_declare_checkout_block_compatibility() {
 	if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
 		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', __FILE__, true);
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true);
 	}
 }
 

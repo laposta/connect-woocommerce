@@ -4,7 +4,7 @@ Tags: laposta, nieuwsbrieven, aanmelden
 Requires at least: 3.0
 Tested up to: 7.1
 Requires PHP: 7.1
-Stable tag: 1.12.0
+Stable tag: 1.12.1
 License: GPLv2 or later
 
 This plugin can be used to add an optin checkbox to receive newsletters, using
@@ -34,11 +34,13 @@ Plugins screen. Then go to the Settings to setup the connection to Laposta.
 
 == Upgrade Notice ==
 
-= 1.12.0 =
-- Added native support for the WooCommerce Checkout Block while retaining classic checkout support.
-- Added a developer filter for influencing the field's relative order within Additional information.
+= 1.12.1 =
+- Declares compatibility with WooCommerce High-Performance Order Storage (HPOS).
 
 == Changelog ==
+= 1.12.1 =
+* Compatibility: Declared compatibility with WooCommerce High-Performance Order Storage (HPOS).
+
 = 1.12.0 =
 * Added: Support for the WooCommerce Checkout Block while retaining classic checkout support.
 * Added: Developer filter for influencing the Laposta field's relative order within the Checkout Block's Additional information section.
